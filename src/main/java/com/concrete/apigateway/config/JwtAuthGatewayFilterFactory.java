@@ -3,6 +3,7 @@ package com.concrete.apigateway.config;
 import java.util.Collections;
 import java.util.List;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.gateway.filter.GatewayFilter;
 import org.springframework.cloud.gateway.filter.factory.AbstractGatewayFilterFactory;
 import org.springframework.http.HttpHeaders;
@@ -14,18 +15,18 @@ import io.jsonwebtoken.Jwts;
 @Component
 public class JwtAuthGatewayFilterFactory extends AbstractGatewayFilterFactory<Object> {
 
-    private final String SECRET_KEY = "my-secret-key";
+    @Value("${jwt.secret}")
+    private String secretKey;
 
     public JwtAuthGatewayFilterFactory() {
         super(Object.class);
     }
-    
+
     @Override
     public List<String> shortcutFieldOrder() {
-        return Collections.emptyList(); // ensures no NPE on default apply()
+        return Collections.emptyList();
     }
 
-    // Empty config class to satisfy AbstractGatewayFilterFactory requirements
     public static class Config {
     }
 
@@ -47,7 +48,7 @@ public class JwtAuthGatewayFilterFactory extends AbstractGatewayFilterFactory<Ob
             String token = authHeader.replace("Bearer ", "");
 
             try {
-                Jwts.parser().setSigningKey(SECRET_KEY).parseClaimsJws(token);
+                Jwts.parser().setSigningKey(secretKey).parseClaimsJws(token);
             } catch (Exception e) {
                 exchange.getResponse().setStatusCode(HttpStatus.UNAUTHORIZED);
                 return exchange.getResponse().setComplete();
